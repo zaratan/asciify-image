@@ -70,7 +70,9 @@ var asciify_core = function(path, opts, callback) {
       c_ratio: opts.c_ratio ? parseInt(opts.c_ratio) : 2,
 
       color:      opts.color  == false    ? false : true,
-      as_string:  opts.format === 'array' ? false : true
+      as_string:  opts.format === 'array'
+               || opts.format === 'rgb'   ? false : true,
+      with_rgb:   opts.format !== 'rgb'   ? false : true,
     }
 
     var new_dims = calculate_dims(image, options);
@@ -96,17 +98,29 @@ var asciify_core = function(path, opts, callback) {
 
           var next = chars.charAt(Math.round(intensity(image, i, j) / norm));
 
-          // Color character using
-          if (options.color) {
+          if (options.with_rgb) {
+            // Return characters with rgb value
             var clr = Jimp.intToRGBA(image.getPixelColor(i, j));
-            next = Couleurs.fg(next, clr.r, clr.g, clr.b);
+            ascii[j].push({
+              v: next,
+              r: clr.r,
+              g: clr.g,
+              b: clr.b,
+            });
+
+          } else {
+            // Color character using
+            if (options.color) {
+              var clr = Jimp.intToRGBA(image.getPixelColor(i, j));
+              next = Couleurs.fg(next, clr.r, clr.g, clr.b);
+            }
+  
+            if (options.as_string)
+              ascii += next;
+  
+            else
+              ascii[j].push(next);
           }
-
-          if (options.as_string)
-            ascii += next;
-
-          else
-            ascii[j].push(next);
         }
       }
 
